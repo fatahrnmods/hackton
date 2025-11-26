@@ -1,6 +1,6 @@
-const { GoogleGenerativeAI } = require('@google-cloud/generative-ai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const client = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'test-key');
 const model = client.getGenerativeModel({ model: 'gemini-pro' });
 
 /**

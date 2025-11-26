@@ -1,14 +1,80 @@
 import axios from 'axios';
 import io from 'socket.io-client';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Determine API base URL based on environment
+const getApiBaseUrl = () => {
+  // Check if running in development
+  if (process.env.NODE_ENV === 'development') {
+    // If we have a custom API URL, use it
+    if (process.env.REACT_APP_API_URL) {
+      return process.env.REACT_APP_API_URL;
+    }
+    
+    // If running in Codespaces or similar, construct URL dynamically
+    const hostname = window.location.hostname;
+    if (hostname.includes('app.github.dev')) {
+      // Extract the base domain and replace port
+      const backendUrl = hostname.replace(/5173/, '5000');
+      return `https://${backendUrl}/api`;
+    }
+    
+    // Default to localhost
+    return 'http://localhost:5000/api';
+  }
+  
+  // Production: use relative path or environment variable
+  return process.env.REACT_APP_API_URL || '/api';
+};
+
+const getSocketUrl = () => {
+  if (process.env.NODE_ENV === 'development') {
+    if (process.env.REACT_APP_SOCKET_URL) {
+      return process.env.REACT_APP_SOCKET_URL;
+    }
+    
+    const hostname = window.location.hostname;
+    if (hostname.includes('app.github.dev')) {
+      const backendUrl = hostname.replace(/5173/, '5000');
+      return `https://${backendUrl}`;
+    }
+    
+    return 'http://localhost:5000';
+  }
+  
+  return process.env.REACT_APP_SOCKET_URL || window.location.origin;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+const SOCKET_URL = getSocketUrl();
+
+// Log untuk debugging
+if (typeof window !== 'undefined') {
+  console.log('🔧 API Configuration:');
+  console.log('  Hostname:', window.location.hostname);
+  console.log('  API Base URL:', API_BASE_URL);
+  console.log('  Socket URL:', SOCKET_URL);
+}
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000
 });
 
-const socket = io('http://localhost:5000', {
+// Add response interceptor untuk logging errors
+api.interceptors.response.use(
+  response => response,
+  error => {
+    console.error('❌ API Error:', {
+      url: error.config?.url,
+      baseURL: error.config?.baseURL,
+      status: error.response?.status,
+      message: error.message
+    });
+    return Promise.reject(error);
+  }
+);
+
+const socket = io(SOCKET_URL, {
   reconnection: true,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,

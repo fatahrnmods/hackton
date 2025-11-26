@@ -7,23 +7,84 @@ const http = require('http');
 
 const app = express();
 const server = http.createServer(app);
+
+// Configure allowed origins
+const getAllowedOrigins = () => {
+  const origins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:3000'
+  ];
+  
+  // Add Codespaces domain if in dev
+  if (process.env.NODE_ENV !== 'production') {
+    origins.push(/app\.github\.dev$/); // Regex to match any github.dev subdomain
+  }
+  
+  // Add production domain if specified
+  if (process.env.FRONTEND_URL) {
+    origins.push(process.env.FRONTEND_URL);
+  }
+  
+  return origins;
+};
+
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"]
+    origin: getAllowedOrigins(),
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true
   }
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: getAllowedOrigins(),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Database Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hackton-sparepart')
-  .then(() => console.log('MongoDB connected'))
-  .catch(err => console.log('MongoDB connection error:', err));
+let mongoConnected = false;
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/hackton-sparepart', {
+  serverSelectionTimeoutMS: 5000,
+})
+  .then(() => {
+    mongoConnected = true;
+    console.log('✅ MongoDB connected');
+  })
+  .catch(err => {
+    mongoConnected = false;
+    console.log('⚠️  MongoDB connection error - Using mock data mode:', err.message);
+  });
+
+// Make MongoDB connection status available globally
+global.mongoConnected = mongoConnected;
+setInterval(() => {
+  global.mongoConnected = mongoConnected;
+}, 5000);
 
 // Routes
+// Root API info
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Hackton Sparepart AI Backend',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      compatibility: '/api/compatibility',
+      pricing: '/api/pricing',
+      stores: '/api/stores',
+      builds: '/api/builds',
+      consultant: '/api/consultant',
+      health: '/health'
+    }
+  });
+});
+
 app.use('/api/compatibility', require('./src/controllers/compatibilityController'));
 app.use('/api/pricing', require('./src/controllers/pricingController'));
 app.use('/api/stores', require('./src/controllers/storeController'));
