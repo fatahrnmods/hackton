@@ -3,11 +3,13 @@ import io from 'socket.io-client';
 
 // Determine API base URL based on environment
 const getApiBaseUrl = () => {
-  // Check if running in development
-  if (process.env.NODE_ENV === 'development') {
+  // Check if running in development (using Vite's import.meta.env)
+  const isDev = import.meta.env.DEV;
+  
+  if (isDev) {
     // If we have a custom API URL, use it
-    if (process.env.REACT_APP_API_URL) {
-      return process.env.REACT_APP_API_URL;
+    if (import.meta.env.VITE_API_URL) {
+      return import.meta.env.VITE_API_URL;
     }
     
     // If running in Codespaces or similar, construct URL dynamically
@@ -23,13 +25,15 @@ const getApiBaseUrl = () => {
   }
   
   // Production: use relative path or environment variable
-  return process.env.REACT_APP_API_URL || '/api';
+  return import.meta.env.VITE_API_URL || '/api';
 };
 
 const getSocketUrl = () => {
-  if (process.env.NODE_ENV === 'development') {
-    if (process.env.REACT_APP_SOCKET_URL) {
-      return process.env.REACT_APP_SOCKET_URL;
+  const isDev = import.meta.env.DEV;
+  
+  if (isDev) {
+    if (import.meta.env.VITE_SOCKET_URL) {
+      return import.meta.env.VITE_SOCKET_URL;
     }
     
     const hostname = window.location.hostname;
@@ -41,7 +45,7 @@ const getSocketUrl = () => {
     return 'http://localhost:5000';
   }
   
-  return process.env.REACT_APP_SOCKET_URL || window.location.origin;
+  return import.meta.env.VITE_SOCKET_URL || window.location.origin;
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -53,6 +57,7 @@ if (typeof window !== 'undefined') {
   console.log('  Hostname:', window.location.hostname);
   console.log('  API Base URL:', API_BASE_URL);
   console.log('  Socket URL:', SOCKET_URL);
+  console.log('  Development Mode:', import.meta.env.DEV);
 }
 
 const api = axios.create({
