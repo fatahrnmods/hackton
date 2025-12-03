@@ -30,9 +30,35 @@ const getAllowedOrigins = () => {
   return origins;
 };
 
+// Custom CORS origin checker function
+const corsOriginChecker = (origin, callback) => {
+  const allowed = getAllowedOrigins();
+  
+  // Allow requests with no origin (like mobile apps or curl requests)
+  if (!origin) {
+    return callback(null, true);
+  }
+  
+  // Check against allowed origins
+  for (let allowedOrigin of allowed) {
+    if (allowedOrigin instanceof RegExp) {
+      if (allowedOrigin.test(origin)) {
+        return callback(null, true);
+      }
+    } else {
+      if (allowedOrigin === origin) {
+        return callback(null, true);
+      }
+    }
+  }
+  
+  console.log('CORS blocked origin:', origin);
+  return callback(null, false);
+};
+
 const io = new Server(server, {
   cors: {
-    origin: getAllowedOrigins(),
+    origin: corsOriginChecker,
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
     allowEIO3: true
@@ -45,10 +71,11 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors({
-  origin: getAllowedOrigins(),
+  origin: corsOriginChecker,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400
 }));
 app.use(express.json());
 
