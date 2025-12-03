@@ -19,7 +19,7 @@ const getAllowedOrigins = () => {
   
   // Add Codespaces domain if in dev
   if (process.env.NODE_ENV !== 'production') {
-    origins.push(/app\.github\.dev$/); // Regex to match any github.dev subdomain
+    origins.push(/\.app\.github\.dev$/); // Regex to match any github.dev subdomain
   }
   
   // Add production domain if specified
@@ -34,8 +34,13 @@ const io = new Server(server, {
   cors: {
     origin: getAllowedOrigins(),
     methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true
-  }
+    credentials: true,
+    allowEIO3: true
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingInterval: 25000,
+  pingTimeout: 20000
 });
 
 // Middleware

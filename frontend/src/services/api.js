@@ -83,7 +83,12 @@ const socket = io(SOCKET_URL, {
   reconnection: true,
   reconnectionDelay: 1000,
   reconnectionDelayMax: 5000,
-  reconnectionAttempts: 5
+  reconnectionAttempts: 5,
+  transports: ['websocket', 'polling'],
+  withCredentials: true,
+  autoConnect: true,
+  secure: SOCKET_URL.startsWith('https'),
+  rejectUnauthorized: false
 });
 
 export const compatibilityService = {
