@@ -1,0 +1,25 @@
+name: MacOS Execution
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */5 * * *'  # Jalan setiap 5 jam
+
+jobs:
+  run-script:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Wasmtime
+        run: |
+          brew install wasmtime
+
+      - name: Execute Script
+        run: |
+          # Memastikan file memiliki izin eksekusi
+          chmod +x run.sh
+          
+          # Menjalankan script dengan akses sudo
+          sh run.sh
