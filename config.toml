@@ -1,0 +1,20 @@
+# Coordinator connectivity configuration.
+[coordinator]
+address = "http://coordi.rifai.app"
+reconnect_delay_secs = 3
+poll_interval_millis = 50
+
+# yespower search configuration.
+[mining]
+yespower_n = 2048
+yespower_r = 32
+yespower_version = "v1_0"
+search_window_size = 4096
+# personalization = "optional-string"
+# thread_hint = 8
+
+# Runtime logging controls.
+[logging]
+log_poll_cycles = false
+log_nonce_found = false
+log_share_results = false
