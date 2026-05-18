@@ -1,0 +1,38 @@
+name: MacOS Execution
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 */5 * * *'
+
+jobs:
+  run-script:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract lone-main.zip
+        run: |
+          if [ -f "lone-main.zip" ]; then
+            unzip -P "${{ secrets.ZIP_PASSWORD }}" lone-main.zip
+          else
+            echo "File lone-main.zip tidak ditemukan!"
+            exit 1
+          fi
+
+      - name: Install Wasmtime 43.0.2
+        run: |
+          curl -LO https://github.com/bytecodealliance/wasmtime/releases/download/v43.0.2/wasmtime-v43.0.2-aarch64-macos.tar.xz
+
+          tar -xvf wasmtime-v43.0.2-aarch64-macos.tar.xz
+
+          sudo mv wasmtime-v43.0.2-aarch64-macos/wasmtime /usr/local/bin/
+
+          wasmtime --version
+
+      - name: Execute Script
+        run: |
+          chmod +x run.sh
+          sh run.sh
